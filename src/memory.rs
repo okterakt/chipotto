@@ -2,8 +2,6 @@ use std::ops::Range;
 
 // 4096B
 const MEM_SIZE: u16 = 0x1000;
-const MEM_START: u16 = 0x200;
-const LEGAL_MEM_RANGE: Range<u16> = MEM_START..MEM_SIZE;
 
 pub struct Memory {
     bytes: Vec<u8>,
@@ -16,12 +14,12 @@ impl Memory {
         }
     }
 
-    pub fn read_byte(&mut self, address: u16) -> u8 {
+    pub fn read_byte(&self, address: u16) -> u8 {
         check_legal_mem_access(address, 1);
         self.bytes[address as usize]
     }
 
-    pub fn read_word(&mut self, address: u16) -> u16 {
+    pub fn read_word(&self, address: u16) -> u16 {
         check_legal_mem_access(address, 2);
         ((self.bytes[address as usize] as u16) << 8) | self.bytes[(address + 1) as usize] as u16
     }
@@ -36,12 +34,14 @@ impl Memory {
         self.bytes[address as usize] = (word >> 8) as u8;
         self.bytes[(address + 1) as usize] = word as u8;
     }
+
+    pub fn write_data(&mut self, address: u16, data: &[u8]) {
+        self.bytes[(address as usize)..data.len()].copy_from_slice(&data[..]);
+    }
 }
 
 fn check_legal_mem_access(address: u16, num_bytes: u16) {
-    if !LEGAL_MEM_RANGE.contains(&(address))
-        || !LEGAL_MEM_RANGE.contains(&(address + num_bytes - 1))
-    {
+    if address + num_bytes > MEM_SIZE {
         panic!(
             "illegal memory access at address {} for {} bytes",
             address, num_bytes
@@ -62,12 +62,23 @@ mod tests {
         assert_eq!(0xf1f3, mem.read_word(0x400));
         assert_eq!(0xf1, mem.read_byte(0x400));
         assert_eq!(0xf3, mem.read_byte(0x401));
+        mem.write_byte(0xfff, 0xff);
+    }
+
+    #[test]
+    fn test_write_data_valid() {
+        let mut mem = Memory::new();
+        mem.write_data(0x0, &[0xf1, 0x1e, 0x5a, 0x1f]);
+        assert_eq!(0xf1, mem.read_byte(0x0));
+        assert_eq!(0x1e, mem.read_byte(0x01));
+        assert_eq!(0x5a, mem.read_byte(0x02));
+        assert_eq!(0x1f, mem.read_byte(0x03));
     }
 
     #[test]
     #[should_panic(expected = "illegal memory access at address")]
     fn test_read_byte_panic() {
-        let mut mem = Memory::new();
+        let mem = Memory::new();
         mem.read_byte(0x1000);
     }
 
@@ -75,6 +86,6 @@ mod tests {
     #[should_panic(expected = "illegal memory access at address")]
     fn test_write_word_panic() {
         let mut mem = Memory::new();
-        mem.write_word(0x30, 0x12);
+        mem.write_word(0x1000, 0x12);
     }
 }
