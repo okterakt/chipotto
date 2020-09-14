@@ -1,3 +1,6 @@
+use std::fmt;
+use std::fmt::{Display, Formatter};
+
 pub enum Instr {
     Cls,
     Ret,
@@ -86,6 +89,48 @@ impl Instr {
             (0xF, _, 3, 3) => Instr::LdBVx(x),
             (0xF, _, 5, 5) => Instr::LdIVx(x),
             (0xF, _, 6, 5) => Instr::LdVxI(x),
+            _ => unreachable!("unknown instruction"),
+        }
+    }
+}
+
+impl Display for Instr {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        match *self {
+            Instr::Cls => write!(f, "CLS"),
+            Instr::Ret => write!(f, "RET"),
+            Instr::Jp(nnn) => write!(f, "JP {:X}", nnn),
+            Instr::Call(nnn) => write!(f, "CALL {:X}", nnn),
+            Instr::SeVxKK(x, kk) => write!(f, "SE V{}, {:X}", x, kk),
+            Instr::SneVxKK(x, kk) => write!(f, "SNE V{}, {:X}", x, kk),
+            Instr::SeVxVy(x, y) => write!(f, "SE V{}, V{}", x, y),
+            Instr::LdVxKK(x, kk) => write!(f, "LD V{}, {:X}", x, kk),
+            Instr::AddVxKK(x, kk) => write!(f, "ADD V{}, {:X}", x, kk),
+            Instr::LdVxVy(x, y) => write!(f, "LD V{}, V{}", x, y),
+            Instr::OrVxVy(x, y) => write!(f, "OR V{}, V{}", x, y),
+            Instr::AndVxVy(x, y) => write!(f, "AND V{}, V{}", x, y),
+            Instr::XorVxVy(x, y) => write!(f, "XOR V{}, V{}", x, y),
+            Instr::AddVxVy(x, y) => write!(f, "ADD V{}, V{}", x, y),
+            Instr::SubVxVy(x, y) => write!(f, "SUB V{}, V{}", x, y),
+            Instr::ShrVx(x) => write!(f, "SHR V{}", x),
+            Instr::SubnVxVy(x, y) => write!(f, "SUBN V{}, V{}", x, y),
+            Instr::ShlVx(x) => write!(f, "SHR V{}", x),
+            Instr::SneVxVy(x, y) => write!(f, "SNE V{}, V{}", x, y),
+            Instr::LdI(nnn) => write!(f, "LD I, {:X}", nnn),
+            Instr::JpV0(nnn) => write!(f, "JP V0, {:X}", nnn),
+            Instr::RndVxKK(x, kk) => write!(f, "RND V{}, {:X}", x, kk),
+            Instr::DrwVxVyN(x, y, n) => write!(f, "DRW V{}, V{}, {}", x, y, n),
+            Instr::SkpVx(x) => write!(f, "SKP V{}", x),
+            Instr::SknpVx(x) => write!(f, "SKPN V{}", x),
+            Instr::LdVxDT(x) => write!(f, "LD V{}, DT", x),
+            Instr::LdVxK(x) => write!(f, "LD V{}, K", x),
+            Instr::LdDTVx(x) => write!(f, "LD DT, V{}", x),
+            Instr::LdSTVx(x) => write!(f, "LD ST, V{}", x),
+            Instr::AddIVx(x) => write!(f, "ADD I, V{}", x),
+            Instr::LdFVx(x) => write!(f, "LD F, V{}", x),
+            Instr::LdBVx(x) => write!(f, "LD B, V{}", x),
+            Instr::LdIVx(x) => write!(f, "LD I, V{}", x),
+            Instr::LdVxI(x) => write!(f, "LD V{}, I", x),
             _ => unreachable!("unknown instruction"),
         }
     }
