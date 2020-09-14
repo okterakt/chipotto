@@ -64,9 +64,9 @@ impl Cpu {
 
     pub fn cycle(&mut self) {
         let opcode = self.fetch();
+        self.skip(); // we read two bytes from memory so we need to increment pc by 2
         let instr = self.decode(opcode);
         self.exec(instr);
-        self.step(); // TODO: check if correct
     }
 
     fn fetch(&self) -> u16 {
@@ -230,16 +230,14 @@ impl Cpu {
             }
             Instr::LdFVx(x) => {
                 // Set I = location of sprite for digit Vx.
-                // TODO: The value of I is set to the location for the hexadecimal sprite corresponding to the value of Vx.
+                self.i = (self.v[x] * 5) as u16;
             }
             Instr::LdBVx(x) => {
                 // Store BCD representation of Vx in memory locations I, I+1, and I+2.
                 let mut num = self.v[x];
+                let hundreds = num / 100;
+                let tens = (num % 100) / 10;
                 let digits = num % 10;
-                num /= 10;
-                let tens = num % 10;
-                num /= 10;
-                let hundreds = num % 10;
                 self.mem.write_byte(self.i, hundreds);
                 self.mem.write_byte(self.i + 1, tens);
                 self.mem.write_byte(self.i + 2, digits);
