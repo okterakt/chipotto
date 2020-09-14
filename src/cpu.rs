@@ -234,8 +234,15 @@ impl Cpu {
             }
             Instr::LdBVx(x) => {
                 // Store BCD representation of Vx in memory locations I, I+1, and I+2.
-                // TODO: The interpreter takes the decimal value of Vx, and places the hundreds digit in
-                // TODO: memory at location in I, the tens digit at location I+1, and the ones digit at location I+2.
+                let mut num = self.v[x];
+                let digits = num % 10;
+                num /= 10;
+                let tens = num % 10;
+                num /= 10;
+                let hundreds = num % 10;
+                self.mem.write_byte(self.i, hundreds);
+                self.mem.write_byte(self.i + 1, tens);
+                self.mem.write_byte(self.i + 2, digits);
             }
             Instr::LdIVx(x) => {
                 // Store registers V0 through Vx in memory starting at location I.
@@ -259,5 +266,23 @@ impl Cpu {
 
     fn skip(&mut self) {
         self.pc += 2;
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::cpu::Cpu;
+    use crate::instr::Instr;
+
+    #[test]
+    fn test_exec_LdBVx() {
+        let mut cpu = Cpu::new();
+        cpu.i = 0x210;
+        cpu.v[0] = 139;
+        let instr = Instr::LdBVx(0);
+        cpu.exec(instr);
+        assert_eq!(1, cpu.mem.read_byte(cpu.i));
+        assert_eq!(3, cpu.mem.read_byte(cpu.i + 1));
+        assert_eq!(9, cpu.mem.read_byte(cpu.i + 2))
     }
 }
