@@ -1,0 +1,92 @@
+pub enum Instr {
+    Cls,
+    Ret,
+    Sys(u16),
+    Jp(u16),
+    Call(u16),
+    SeVxKK(u8, u8),
+    SneVxKK(u8, u8),
+    SeVxVy(u8, u8),
+    SneVxVy(u8, u8),
+    LdVxKK(u8, u8),
+    AddVxKK(u8, u8),
+    LdVxVy(u8, u8),
+    OrVxVy(u8, u8),
+    AndVxVy(u8, u8),
+    XorVxVy(u8, u8),
+    AddVxVy(u8, u8),
+    SubVxVy(u8, u8),
+    SubnVxVy(u8, u8),
+    ShrVx(u8),
+    ShlVx(u8),
+    LdI(u16),
+    JpV0(u16),
+    RndVxKK(u8, u8),
+    DrwVxVyN(u8, u8, u8),
+    SkpVx(u8),
+    SknpVx(u8),
+    LdVxDT(u8),
+    LdVxK(u8),
+    LdDTVx(u8),
+    LdSTVx(u8),
+    AddIVx(u8),
+    LdFVx(u8),
+    LdBVx(u8),
+    LdIVx(u8),
+    LdVxI(u8),
+}
+
+impl Instr {
+    pub fn from(opcode: u16) -> Instr {
+        let nibbles = (
+            ((opcode & 0xF000) >> 12) as u8,
+            ((opcode & 0x0F00) >> 8) as u8,
+            ((opcode & 0x00F0) >> 4) as u8,
+            ((opcode & 0x000F) >> 0) as u8,
+        );
+        let nnn = opcode & 0x0FFF; // also called xyz
+        let kk = (opcode & 0x00FF) as u8; // also called yz
+        let x = nibbles.1;
+        let y = nibbles.2;
+        let n = nibbles.3;
+
+        match nibbles {
+            (0, 0, 0xE, 0) => Instr::Cls,
+            (0, 0, 0xE, 0xE) => Instr::Ret,
+            (0, _, _, _) => Instr::Sys(nnn),
+            (1, _, _, _) => Instr::Jp(nnn),
+            (2, _, _, _) => Instr::Call(nnn),
+            (3, _, _, _) => Instr::SeVxKK(x, kk),
+            (4, _, _, _) => Instr::SneVxKK(x, kk),
+            (5, _, _, _) => Instr::SeVxVy(x, y),
+            (6, _, _, _) => Instr::LdVxKK(x, kk),
+            (7, _, _, _) => Instr::AddVxKK(x, kk),
+            (8, _, _, 0) => Instr::LdVxVy(x, y),
+            (8, _, _, 1) => Instr::OrVxVy(x, y),
+            (8, _, _, 2) => Instr::AndVxVy(x, y),
+            (8, _, _, 3) => Instr::XorVxVy(x, y),
+            (8, _, _, 4) => Instr::AddVxVy(x, y),
+            (8, _, _, 5) => Instr::SubVxVy(x, y),
+            (8, _, _, 6) => Instr::ShrVx(x),
+            (8, _, _, 7) => Instr::SubnVxVy(x, y),
+            (8, _, _, 0xE) => Instr::ShlVx(x),
+            (9, _, _, 0) => Instr::SneVxVy(x, y),
+            (0xA, _, _, _) => Instr::LdI(nnn),
+            (0xB, _, _, _) => Instr::JpV0(nnn),
+            (0xC, _, _, _) => Instr::RndVxKK(x, kk),
+            (0xD, _, _, _) => Instr::DrwVxVyN(x, y, n),
+            (0xE, _, 9, 0xE) => Instr::SkpVx(x),
+            (0xE, _, 0xA, 1) => Instr::SknpVx(x),
+            (0xF, _, 0, 7) => Instr::LdVxDT(x),
+            (0xF, _, 0, 0xA) => Instr::LdVxK(x),
+            (0xF, _, 1, 5) => Instr::LdDTVx(x),
+            (0xF, _, 1, 8) => Instr::LdSTVx(x),
+            (0xF, _, 1, 0xE) => Instr::AddIVx(x),
+            (0xF, _, 2, 9) => Instr::LdFVx(x),
+            (0xF, _, 3, 3) => Instr::LdBVx(x),
+            (0xF, _, 5, 5) => Instr::LdIVx(x),
+            (0xF, _, 6, 5) => Instr::LdVxI(x),
+            _ => unreachable!("unknown instruction"),
+        }
+    }
+}
