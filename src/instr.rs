@@ -4,36 +4,36 @@ pub enum Instr {
     Sys(u16),
     Jp(u16),
     Call(u16),
-    SeVxKK(u8, u8),
-    SneVxKK(u8, u8),
-    SeVxVy(u8, u8),
-    SneVxVy(u8, u8),
-    LdVxKK(u8, u8),
-    AddVxKK(u8, u8),
-    LdVxVy(u8, u8),
-    OrVxVy(u8, u8),
-    AndVxVy(u8, u8),
-    XorVxVy(u8, u8),
-    AddVxVy(u8, u8),
-    SubVxVy(u8, u8),
-    SubnVxVy(u8, u8),
-    ShrVx(u8),
-    ShlVx(u8),
+    SeVxKK(usize, u8),
+    SneVxKK(usize, u8),
+    SeVxVy(usize, usize),
+    SneVxVy(usize, usize),
+    LdVxKK(usize, u8),
+    AddVxKK(usize, u8),
+    LdVxVy(usize, usize),
+    OrVxVy(usize, usize),
+    AndVxVy(usize, usize),
+    XorVxVy(usize, usize),
+    AddVxVy(usize, usize),
+    SubVxVy(usize, usize),
+    SubnVxVy(usize, usize),
+    ShrVx(usize),
+    ShlVx(usize),
     LdI(u16),
     JpV0(u16),
-    RndVxKK(u8, u8),
-    DrwVxVyN(u8, u8, u8),
-    SkpVx(u8),
-    SknpVx(u8),
-    LdVxDT(u8),
-    LdVxK(u8),
-    LdDTVx(u8),
-    LdSTVx(u8),
-    AddIVx(u8),
-    LdFVx(u8),
-    LdBVx(u8),
-    LdIVx(u8),
-    LdVxI(u8),
+    RndVxKK(usize, u8),
+    DrwVxVyN(usize, usize, usize),
+    SkpVx(usize),
+    SknpVx(usize),
+    LdVxDT(usize),
+    LdVxK(usize),
+    LdDTVx(usize),
+    LdSTVx(usize),
+    AddIVx(usize),
+    LdFVx(usize),
+    LdBVx(usize),
+    LdIVx(usize),
+    LdVxI(usize),
 }
 
 impl Instr {
@@ -46,9 +46,9 @@ impl Instr {
         );
         let nnn = opcode & 0x0FFF; // also called xyz
         let kk = (opcode & 0x00FF) as u8; // also called yz
-        let x = nibbles.1;
-        let y = nibbles.2;
-        let n = nibbles.3;
+        let x = nibbles.1 as usize;
+        let y = nibbles.2 as usize;
+        let n = nibbles.3 as usize;
 
         match nibbles {
             (0, 0, 0xE, 0) => Instr::Cls,

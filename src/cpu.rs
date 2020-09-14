@@ -1,8 +1,10 @@
 use crate::instr::Instr;
 use crate::memory::Memory;
+use rand::prelude::ThreadRng;
+use rand::Rng;
+use std::borrow::BorrowMut;
 use std::fs;
 use std::path::PathBuf;
-use std::borrow::BorrowMut;
 
 const PC_START: u16 = 0x200;
 const STACK_SIZE: usize = 16;
@@ -29,10 +31,11 @@ pub struct Cpu {
     pc: u16,         // program counter
     v: [u8; 16],     // Vx registers
     i: u16,          // I register
-    dt: i32,         // delay timer
-    st: i32,         // sound timer
+    dt: u8,          // delay timer
+    st: u8,          // sound timer
     stack: Vec<u16>, // stack
     mem: Memory,
+    rng: ThreadRng,
 }
 
 impl Cpu {
@@ -45,6 +48,7 @@ impl Cpu {
             st: 0,
             stack: Vec::with_capacity(STACK_SIZE),
             mem: Memory::new(),
+            rng: rand::thread_rng(),
         };
 
         // load font sprites; TODO: maybe move to Memory
@@ -92,8 +96,8 @@ impl Cpu {
             }
             Instr::Call(nnn) => {
                 // Call subroutine at nnn.
-                self.stack.push(pc);
-                pc = nnn;
+                self.stack.push(self.pc);
+                self.pc = nnn;
             }
             Instr::SeVxKK(x, kk) => {
                 // Skip next instruction if Vx = kk.
@@ -115,51 +119,69 @@ impl Cpu {
             }
             Instr::SneVxVy(x, y) => {
                 // Skip next instruction if Vx != Vy.
-                if v[x] != v[y] {
-                    skip();
+                if self.v[x] != self.v[y] {
+                    self.skip();
                 }
             }
-            Instr::LdVxKK(x, kk) => self.v[x] == kk,
-            Instr::AddVxKK(x, kk) => self.v[x] += kk,
-            Instr::LdVxVy(x, y) => self.v[x] == self.v[y],
-            Instr::OrVxVy(x, y) => self.v[x] | self.v[y],
-            Instr::AndVxVy(x, y) => self.v[x] & self.v[y],
-            Instr::XorVxVy(x, y) => self.v[x] ^ self.v[y],
+            Instr::LdVxKK(x, kk) => {
+                // Set Vx = kk.
+                self.v[x] = kk
+            }
+            Instr::AddVxKK(x, kk) => {
+                // Set Vx = Vx + kk.
+                self.v[x] += kk
+            }
+            Instr::LdVxVy(x, y) => {
+                // Set Vx = Vy.
+                self.v[x] = self.v[y]
+            }
+            Instr::OrVxVy(x, y) => {
+                // Set Vx = Vx OR Vy.
+                self.v[x] |= self.v[y]
+            }
+            Instr::AndVxVy(x, y) => {
+                // Set Vx = Vx AND Vy.
+                self.v[x] &= self.v[y]
+            }
+            Instr::XorVxVy(x, y) => {
+                // Set Vx = Vx XOR Vy.
+                self.v[x] ^= self.v[y]
+            }
             Instr::AddVxVy(x, y) => {
                 // Set Vx = Vx + Vy, set VF = carry.
-                let sum = (v[x] as u16) + v[y];
+                let sum = (self.v[x] as u16) + (self.v[y] as u16);
                 if sum > 255 {
-                    v[0xF] = 1;
+                    self.v[0xF] = 1;
                 }
-                v[x] = sum as u8;
+                self.v[x] = sum as u8;
             }
             Instr::SubVxVy(x, y) => {
                 // Set Vx = Vx - Vy, set VF = NOT borrow.
-                if v[x] > v[y] {
-                    v[0xF] = 1;
+                if self.v[x] > self.v[y] {
+                    self.v[0xF] = 1;
                 } else {
-                    v[0xF] = 0;
+                    self.v[0xF] = 0;
                 }
-                v[x] -= v[y];
+                self.v[x] -= self.v[y];
             }
             Instr::SubnVxVy(x, y) => {
                 // Set Vx = Vy - Vx, set VF = NOT borrow.
-                if v[y] > v[x] {
-                    v[0xF] = 1;
+                if self.v[y] > self.v[x] {
+                    self.v[0xF] = 1;
                 } else {
-                    v[0xF] = 0;
+                    self.v[0xF] = 0;
                 }
-                v[x] = v[y] - v[x];
+                self.v[x] = self.v[y] - self.v[x];
             }
             Instr::ShrVx(x) => {
                 // Set Vx = Vx SHR 1.
-                v[0xF] = x & 1;
-                v[x] >>= 1;
+                self.v[0xF] = x as u8 & 1;
+                self.v[x] >>= 1;
             }
             Instr::ShlVx(x) => {
                 // Set Vx = Vx SHL 1.
-                v[0xF] = (x & 0x80) >> 7;
-                v[x] <<= 1;
+                self.v[0xF] = (x as u8 & 0x80) >> 7;
+                self.v[x] <<= 1;
             }
             Instr::LdI(nnn) => {
                 // Set I = nnn.
@@ -167,12 +189,12 @@ impl Cpu {
             }
             Instr::JpV0(nnn) => {
                 // Jump to location nnn + V0.
-                self.pc = nnn + v[0];
+                self.pc = nnn + (self.v[0] as u16);
             }
             Instr::RndVxKK(x, kk) => {
                 // Set Vx = random byte AND kk.
-                let rand_byte = 0x0; // TODO: get true random byte
-                v[x] = kk & rand_byte;
+                let rand_byte = self.rng.gen::<u8>();
+                self.v[x] = kk & rand_byte;
             }
             Instr::DrwVxVyN(x, y, n) => {
                 // Display n-byte sprite starting at memory location I at (Vx, Vy), set VF = collision.
@@ -204,7 +226,7 @@ impl Cpu {
             }
             Instr::AddIVx(x) => {
                 // Set I = I + Vx.
-                self.i += v[x];
+                self.i += self.v[x] as u16;
             }
             Instr::LdFVx(x) => {
                 // Set I = location of sprite for digit Vx.
