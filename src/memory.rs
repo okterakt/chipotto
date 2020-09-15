@@ -41,7 +41,7 @@ impl Memory {
     }
 
     pub fn write_data(&mut self, address: u16, data: &[u8]) {
-        check_legal_mem_access(address, num_bytes);
+        check_legal_mem_access(address, data.len() as u16);
         self.bytes[(address as usize)..(address as usize + data.len())].copy_from_slice(&data[..]);
     }
 }
