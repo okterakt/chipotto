@@ -2,7 +2,7 @@ const SCREEN_WIDTH: usize = 64;
 const SCREEN_HEIGHT: usize = 32;
 
 pub struct FrameBuffer {
-    buffer: [u8; SCREEN_WIDTH * SCREEN_HEIGHT],
+    pub buffer: [u8; SCREEN_WIDTH * SCREEN_HEIGHT],
 }
 
 impl Default for FrameBuffer {
