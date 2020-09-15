@@ -8,16 +8,16 @@ use std::time::{Duration, Instant};
 
 const TIMERS_INTERVAL_MICROS: u64 = 1_000_000 / 60;
 
-struct Chip8 {
+pub(crate) struct Chip8 {
     paused: bool,
     clock_hz: u32,
-    cpu: Cpu,
-    frame_buffer: FrameBuffer,
+    pub cpu: Cpu,
+    pub frame_buffer: FrameBuffer,
     // other config options: bg and fg color (or maybe not part of this backend), different clock speed
 }
 
 impl Chip8 {
-    pub fn new(file_path: &PathBuf) -> Self {
+    pub fn new() -> Self {
         Chip8 {
             paused: false,
             clock_hz: 500,
@@ -26,10 +26,8 @@ impl Chip8 {
         }
     }
 
-    pub fn load_rom(&mut self, filename: &PathBuf) {
-        // TODO: return error to main
-        let contents = fs::read(filename).expect("could not read the file");
-        self.cpu.load_rom(contents.as_slice());
+    pub fn load_rom(&mut self, contents: &[u8]) {
+        self.cpu.load_rom(contents);
     }
 
     pub fn run(&mut self) {
