@@ -1,3 +1,5 @@
+use crate::chip8::Chip8;
+use crate::framebuffer::FrameBuffer;
 use crate::instr::Instr;
 use crate::memory::Memory;
 use rand::prelude::ThreadRng;
@@ -68,11 +70,11 @@ impl Cpu {
         }
     }
 
-    pub fn cycle(&mut self) {
+    pub fn cycle(&mut self, frame_buffer: &mut FrameBuffer) {
         let opcode = self.fetch();
         self.skip(); // we read two bytes from memory so we need to increment pc by 2
         let instr = self.decode(opcode);
-        self.exec(instr);
+        self.exec(instr, frame_buffer);
     }
 
     fn fetch(&self) -> u16 {
@@ -83,12 +85,11 @@ impl Cpu {
         Instr::from(opcode)
     }
 
-    fn exec(&mut self, instr: Instr) {
-        // TODO: maybe return Result
+    fn exec(&mut self, instr: Instr, frame_buffer: &mut FrameBuffer) {
         match instr {
             Instr::Cls => {
                 // Clear the display.
-                // TODO: clear screen
+                frame_buffer.clear();
             }
             Instr::Ret => {
                 // Return from a subroutine.
@@ -204,7 +205,12 @@ impl Cpu {
             }
             Instr::DrwVxVyN(x, y, n) => {
                 // Display n-byte sprite starting at memory location I at (Vx, Vy), set VF = collision.
-                // TODO: implement draw sprites
+                let coll = frame_buffer.draw(
+                    self.v[x] as u8,
+                    self.v[y] as u8,
+                    self.mem.read_data(self.i, n as u16).as_slice(),
+                );
+                self.v[0x0F] = coll as u8;
             }
             Instr::SkpVx(x) => {
                 // Skip next instruction if key with the value of Vx is pressed.
@@ -240,7 +246,7 @@ impl Cpu {
             }
             Instr::LdBVx(x) => {
                 // Store BCD representation of Vx in memory locations I, I+1, and I+2.
-                let mut num = self.v[x];
+                let num = self.v[x];
                 let hundreds = num / 100;
                 let tens = (num % 100) / 10;
                 let digits = num % 10;
@@ -275,16 +281,20 @@ impl Cpu {
 
 #[cfg(test)]
 mod tests {
+    use crate::chip8::Chip8;
     use crate::cpu::Cpu;
+    use crate::framebuffer::FrameBuffer;
     use crate::instr::Instr;
 
     #[test]
     fn test_exec_LdBVx() {
+        // TODO: create frame buffer, memory and keypad only, not entire chip8
+        let mut frame_buffer = FrameBuffer::default();
         let mut cpu = Cpu::new();
         cpu.i = 0x210;
         cpu.v[0] = 139;
         let instr = Instr::LdBVx(0);
-        cpu.exec(instr);
+        cpu.exec(instr, &mut frame_buffer);
         assert_eq!(1, cpu.mem.read_byte(cpu.i));
         assert_eq!(3, cpu.mem.read_byte(cpu.i + 1));
         assert_eq!(9, cpu.mem.read_byte(cpu.i + 2))
