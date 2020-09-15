@@ -1,7 +1,15 @@
 const KEY_COUNT: usize = 16;
 
-struct Keypad {
-    keys: [bool; KEY_COUNT]
+pub struct Keypad {
+    keys: [bool; KEY_COUNT],
+}
+
+impl Default for Keypad {
+    fn default() -> Self {
+        Keypad {
+            keys: [false; KEY_COUNT],
+        }
+    }
 }
 
 impl Keypad {
