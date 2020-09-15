@@ -36,7 +36,7 @@ impl Memory {
     }
 
     pub fn write_data(&mut self, address: u16, data: &[u8]) {
-        self.bytes[(address as usize)..data.len()].copy_from_slice(&data[..]);
+        self.bytes[(address as usize)..(address as usize + data.len())].copy_from_slice(&data[..]);
     }
 }
 
