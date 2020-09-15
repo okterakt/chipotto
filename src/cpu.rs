@@ -5,6 +5,7 @@ use crate::memory::Memory;
 use rand::prelude::ThreadRng;
 use rand::Rng;
 use std::fs;
+use crate::keypad::Keypad;
 
 const PC_START: u16 = 0x200;
 const STACK_SIZE: usize = 16;
@@ -70,11 +71,11 @@ impl Cpu {
         }
     }
 
-    pub fn cycle(&mut self, frame_buffer: &mut FrameBuffer) {
+    pub fn cycle(&mut self, frame_buffer: &mut FrameBuffer, keypad: &mut Keypad) {
         let opcode = self.fetch();
         self.skip(); // we read two bytes from memory so we need to increment pc by 2
         let instr = self.decode(opcode);
-        self.exec(instr, frame_buffer);
+        self.exec(instr, frame_buffer, keypad);
     }
 
     fn fetch(&self) -> u16 {
@@ -85,7 +86,7 @@ impl Cpu {
         Instr::from(opcode)
     }
 
-    fn exec(&mut self, instr: Instr, frame_buffer: &mut FrameBuffer) {
+    fn exec(&mut self, instr: Instr, frame_buffer: &mut FrameBuffer, keypad: &mut Keypad) {
         match instr {
             Instr::Cls => {
                 // Clear the display.
@@ -214,8 +215,9 @@ impl Cpu {
             }
             Instr::SkpVx(x) => {
                 // Skip next instruction if key with the value of Vx is pressed.
-                // TODO: Checks the keyboard, and if the key corresponding to the value of Vx
-                // TODO: is currently in the down position, PC is increased by 2.
+                if keypad.is_pressed(self.v[x]) {
+                    self.skip();
+                }
             }
             Instr::SknpVx(x) => {
                 // Skip next instruction if key with the value of Vx is not pressed.
@@ -226,7 +228,11 @@ impl Cpu {
             }
             Instr::LdVxK(x) => {
                 // Wait for a key press, store the value of the key in Vx.
-                // TODO: All execution stops until a key is pressed, then the value of that key is stored in Vx.
+                if let Some(k) = keypad.get_pressed_key() {
+                    self.v[x] = k;
+                } else {
+                    self.pc -= 1;
+                }
             }
             Instr::LdDTVx(x) => {
                 // Set delay timer = Vx.
@@ -265,7 +271,6 @@ impl Cpu {
                 //     dest.copy_from_slice(&bytes[address..(address + num_bytes)]);
                 // }
             }
-            // TODO: finish implementing instructions
             _ => {}
         }
     }
