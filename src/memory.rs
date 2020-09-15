@@ -19,14 +19,14 @@ impl Memory {
         self.bytes[address as usize]
     }
 
-    pub fn read_word(&self, address: u16) -> u16 {
-        check_legal_mem_access(address, 2);
-        ((self.bytes[address as usize] as u16) << 8) | self.bytes[(address + 1) as usize] as u16
-    }
-
     pub fn write_byte(&mut self, address: u16, byte: u8) {
         check_legal_mem_access(address, 1);
         self.bytes[address as usize] = byte;
+    }
+
+    pub fn read_word(&self, address: u16) -> u16 {
+        check_legal_mem_access(address, 2);
+        ((self.bytes[address as usize] as u16) << 8) | self.bytes[(address + 1) as usize] as u16
     }
 
     pub fn write_word(&mut self, address: u16, word: u16) {
@@ -35,7 +35,13 @@ impl Memory {
         self.bytes[(address + 1) as usize] = word as u8;
     }
 
+    pub fn read_data(&self, address: u16, num_bytes: u16) -> Vec<u8> {
+        check_legal_mem_access(address, num_bytes);
+        self.bytes[(address as usize)..((address + num_bytes) as usize)].to_vec()
+    }
+
     pub fn write_data(&mut self, address: u16, data: &[u8]) {
+        check_legal_mem_access(address, num_bytes);
         self.bytes[(address as usize)..(address as usize + data.len())].copy_from_slice(&data[..]);
     }
 }
