@@ -1,8 +1,8 @@
+mod chip8;
 mod cpu;
+mod framebuffer;
 mod instr;
 mod memory;
-mod chip8;
-mod framebuffer;
 
 fn main() {
     println!("Hello, world!");

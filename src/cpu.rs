@@ -2,9 +2,7 @@ use crate::instr::Instr;
 use crate::memory::Memory;
 use rand::prelude::ThreadRng;
 use rand::Rng;
-use std::borrow::BorrowMut;
 use std::fs;
-use std::path::PathBuf;
 
 const PC_START: u16 = 0x200;
 const STACK_SIZE: usize = 16;
@@ -57,9 +55,17 @@ impl Cpu {
         cpu
     }
 
-    pub fn load_rom(&mut self, filename: &PathBuf) {
-        let contents = fs::read(filename).expect("could not read the file");
-        self.mem.write_data(PC_START, contents.as_slice());
+    pub fn load_rom(&mut self, contents: &[u8]) {
+        self.mem.write_data(PC_START, contents);
+    }
+
+    pub fn update_timers(&mut self) {
+        if self.dt > 0 {
+            self.dt -= 1;
+        }
+        if self.st > 0 {
+            self.st -= 1;
+        }
     }
 
     pub fn cycle(&mut self) {

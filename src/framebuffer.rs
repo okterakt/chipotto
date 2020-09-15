@@ -2,37 +2,37 @@ const SCREEN_WIDTH: usize = 64;
 const SCREEN_HEIGHT: usize = 32;
 
 pub struct FrameBuffer {
-    buffer: [u8; SCREEN_WIDTH * SCREEN_HEIGHT]
+    buffer: [u8; SCREEN_WIDTH * SCREEN_HEIGHT],
 }
 
 impl Default for FrameBuffer {
     fn default() -> Self {
         FrameBuffer {
-            buffer: [0u8; SCREEN_WIDTH * SCREEN_HEIGHT]
+            buffer: [0u8; SCREEN_WIDTH * SCREEN_HEIGHT],
         }
     }
 }
 
 impl FrameBuffer {
-    fn clear(&mut self) {
+    pub fn clear(&mut self) {
         self.buffer.iter_mut().for_each(|pixel| *pixel = 0)
     }
 
     fn set_pixel(&mut self, x: usize, y: usize, v: u8) {
-        self.buffer[x + SCREEN_WIDTH * y] = v;
+        self.buffer[y * SCREEN_WIDTH + x] = v;
     }
 
     fn get_pixel(&self, x: usize, y: usize) -> u8 {
-        self.buffer[x + SCREEN_WIDTH * y]
+        self.buffer[y * SCREEN_WIDTH + x]
     }
 
-    fn draw(&mut self, x: u8, y: u8, data: &[u8]) -> bool {
+    pub fn draw(&mut self, x: u8, y: u8, data: &[u8]) -> bool {
         // each byte will represent a pixel on the screen; this means that when we get a byte
         // in input, we first need to transform each bit in a byte with values 0 or 1 (on/off).
         // one byte in input is equivalent to 8 bytes in the buffer.
         let mut collided = false;
         let mut row = 0;
-        for (_, byte) in data.iter().enumerate() {
+        for byte in data.iter() {
             for col in 0..8 {
                 let new_val = (byte >> (7 - col)) & 0x01;
                 if new_val == 1 {
@@ -48,6 +48,20 @@ impl FrameBuffer {
             row += 1;
         }
         collided
+    }
+
+    pub fn dump(&self) {
+        for y in 0..SCREEN_HEIGHT {
+            for x in 0..SCREEN_WIDTH {
+                let val = self.buffer[y * SCREEN_WIDTH + x];
+                if val == 1 {
+                    print!(".");
+                } else {
+                    print!("X");
+                }
+            }
+            println!();
+        }
     }
 }
 
