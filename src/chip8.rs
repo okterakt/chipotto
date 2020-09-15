@@ -1,6 +1,7 @@
 use crate::cpu::Cpu;
 use crate::framebuffer::FrameBuffer;
 use crate::instr::Instr;
+use crate::keypad::Keypad;
 use std::borrow::BorrowMut;
 use std::fs;
 use std::ops::Add;
@@ -12,6 +13,7 @@ pub(crate) struct Chip8 {
     clock_hz: u32,
     pub cpu: Cpu,
     pub frame_buffer: FrameBuffer,
+    pub keypad: Keypad,
 }
 
 impl Chip8 {
@@ -21,6 +23,7 @@ impl Chip8 {
             clock_hz: 500,
             cpu: Cpu::new(),
             frame_buffer: FrameBuffer::default(),
+            keypad: Keypad::default(),
         }
     }
 
