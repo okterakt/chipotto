@@ -23,8 +23,8 @@ impl Keypad {
 
     pub fn get_pressed_key(&self) -> Option<u8> {
         for (i, b) in self.keys.iter().enumerate() {
-            if b {
-                Some(i as u8)
+            if *b {
+                return Some(i as u8);
             }
         }
         None
