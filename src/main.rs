@@ -1,10 +1,10 @@
 use chip8::Chip8;
 use clap::{App, Arg, ArgMatches};
 use minifb::{Key, Scale, ScaleMode, Window, WindowOptions};
-use std::{fs, error};
 use std::path::PathBuf;
 use std::str::FromStr;
 use std::time::{Duration, Instant};
+use std::{error, fs};
 
 mod chip8;
 mod cpu;

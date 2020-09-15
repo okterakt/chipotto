@@ -32,7 +32,7 @@ impl Chip8 {
     }
 
     pub fn cpu_cycle(&mut self) {
-        self.cpu.cycle(&mut self.frame_buffer);
+        self.cpu.cycle(&mut self.frame_buffer, &mut self.keypad);
     }
 
     pub fn timers_tick(&mut self) {

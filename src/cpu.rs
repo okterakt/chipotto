@@ -1,11 +1,11 @@
 use crate::chip8::Chip8;
 use crate::framebuffer::FrameBuffer;
 use crate::instr::Instr;
+use crate::keypad::Keypad;
 use crate::memory::Memory;
 use rand::prelude::ThreadRng;
 use rand::Rng;
 use std::fs;
-use crate::keypad::Keypad;
 
 const PC_START: u16 = 0x200;
 const STACK_SIZE: usize = 16;
@@ -266,10 +266,7 @@ impl Cpu {
             }
             Instr::LdVxI(x) => {
                 // Read registers V0 through Vx from memory starting at location I.
-                // TODO: self.mem.copy_into(&self.v, self.i, self.x + 1);
-                // fn copy_into(&mut self, dest: &mut [u8], address: u16, num_bytes: u16) {
-                //     dest.copy_from_slice(&bytes[address..(address + num_bytes)]);
-                // }
+                self.mem.copy_into(&mut self.v, self.i, (x + 1) as u16);
             }
             _ => {}
         }
@@ -290,16 +287,18 @@ mod tests {
     use crate::cpu::Cpu;
     use crate::framebuffer::FrameBuffer;
     use crate::instr::Instr;
+    use crate::keypad::Keypad;
 
     #[test]
     fn test_exec_LdBVx() {
         // TODO: create frame buffer, memory and keypad only, not entire chip8
         let mut frame_buffer = FrameBuffer::default();
         let mut cpu = Cpu::new();
+        let mut keypad = Keypad::default();
         cpu.i = 0x210;
         cpu.v[0] = 139;
         let instr = Instr::LdBVx(0);
-        cpu.exec(instr, &mut frame_buffer);
+        cpu.exec(instr, &mut frame_buffer, &mut keypad);
         assert_eq!(1, cpu.mem.read_byte(cpu.i));
         assert_eq!(3, cpu.mem.read_byte(cpu.i + 1));
         assert_eq!(9, cpu.mem.read_byte(cpu.i + 2))

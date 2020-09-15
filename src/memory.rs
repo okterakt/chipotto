@@ -44,6 +44,11 @@ impl Memory {
         check_legal_mem_access(address, data.len() as u16);
         self.bytes[(address as usize)..(address as usize + data.len())].copy_from_slice(&data[..]);
     }
+
+    pub fn copy_into(&mut self, dest: &mut [u8], address: u16, num_bytes: u16) {
+        check_legal_mem_access(address, num_bytes);
+        dest.copy_from_slice(&self.bytes[(address as usize)..((address + num_bytes) as usize)]);
+    }
 }
 
 fn check_legal_mem_access(address: u16, num_bytes: u16) {
