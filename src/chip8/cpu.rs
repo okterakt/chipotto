@@ -66,6 +66,7 @@ impl Cpu {
             Instr::Cls => {
                 // Clear the display.
                 frame_buffer.clear();
+                frame_buffer.set_changed(true);
             }
             Instr::Ret => {
                 // Return from a subroutine.
@@ -178,6 +179,7 @@ impl Cpu {
                     self.v[y] as u8,
                     mem.read_data(self.i, n as u16).as_slice(),
                 );
+                frame_buffer.set_changed(true);
                 self.v[0x0F] = coll as u8;
             }
             Instr::SkpVx(x) => {

@@ -1,29 +1,43 @@
-const SCREEN_WIDTH: usize = 64;
-const SCREEN_HEIGHT: usize = 32;
+const BUFFER_WIDTH: usize = 64;
+const BUFFER_HEIGHT: usize = 32;
 
 pub struct FrameBuffer {
-    pub buffer: [u8; SCREEN_WIDTH * SCREEN_HEIGHT],
+    buffer: [u8; BUFFER_WIDTH * BUFFER_HEIGHT],
+    has_changed: bool,
 }
 
 impl Default for FrameBuffer {
     fn default() -> Self {
         FrameBuffer {
-            buffer: [0u8; SCREEN_WIDTH * SCREEN_HEIGHT],
+            buffer: [0u8; BUFFER_WIDTH * BUFFER_HEIGHT],
+            has_changed: false,
         }
     }
 }
 
 impl FrameBuffer {
+    pub fn get_buffer(&self) -> &[u8] {
+        &self.buffer
+    }
+
+    pub fn has_changed(&self) -> bool {
+        self.has_changed
+    }
+
+    pub fn set_changed(&mut self, changed: bool) {
+        self.has_changed = changed
+    }
+
     pub fn clear(&mut self) {
         self.buffer.iter_mut().for_each(|pixel| *pixel = 0)
     }
 
-    fn set_pixel(&mut self, x: usize, y: usize, v: u8) {
-        self.buffer[y * SCREEN_WIDTH + x] = v;
+    fn get_pixel(&self, x: usize, y: usize) -> u8 {
+        self.buffer[y * BUFFER_WIDTH + x]
     }
 
-    fn get_pixel(&self, x: usize, y: usize) -> u8 {
-        self.buffer[y * SCREEN_WIDTH + x]
+    fn set_pixel(&mut self, x: usize, y: usize, v: u8) {
+        self.buffer[y * BUFFER_WIDTH + x] = v;
     }
 
     pub fn draw(&mut self, x: u8, y: u8, data: &[u8]) -> bool {
@@ -36,8 +50,8 @@ impl FrameBuffer {
             for col in 0..8 {
                 let new_val = (byte >> (7 - col)) & 0x01;
                 if new_val == 1 {
-                    let x_idx = ((x + col) as usize) % SCREEN_WIDTH;
-                    let y_idx = ((y + row) as usize) % SCREEN_HEIGHT;
+                    let x_idx = ((x + col) as usize) % BUFFER_WIDTH;
+                    let y_idx = ((y + row) as usize) % BUFFER_HEIGHT;
                     let old_val = self.get_pixel(x_idx, y_idx);
                     if old_val == 1 {
                         collided = true;
@@ -51,9 +65,9 @@ impl FrameBuffer {
     }
 
     pub fn dump(&self) {
-        for y in 0..SCREEN_HEIGHT {
-            for x in 0..SCREEN_WIDTH {
-                let val = self.buffer[y * SCREEN_WIDTH + x];
+        for y in 0..BUFFER_HEIGHT {
+            for x in 0..BUFFER_WIDTH {
+                let val = self.buffer[y * BUFFER_WIDTH + x];
                 if val == 1 {
                     print!(".");
                 } else {
