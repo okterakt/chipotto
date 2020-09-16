@@ -10,22 +10,22 @@ use std::fs;
 const PC_START: u16 = 0x200;
 const STACK_SIZE: usize = 16;
 const FONT_SPRITES: [u8; 80] = [
-    0xF0, 0x10, 0xF0, 0x80, 0xF0, // 0
-    0xF0, 0x10, 0xF0, 0x10, 0xF0, // 1
-    0xF0, 0x80, 0xF0, 0x90, 0xF0, // 2
-    0xF0, 0x10, 0x20, 0x40, 0x40, // 3
-    0xF0, 0x90, 0xF0, 0x90, 0x90, // 4
-    0xE0, 0x90, 0xE0, 0x90, 0xE0, // 5
-    0xF0, 0x80, 0xF0, 0x80, 0xF0, // 6
-    0xF0, 0x80, 0xF0, 0x80, 0x80, // 7
     0xF0, 0x90, 0x90, 0x90, 0xF0, // 8
     0x20, 0x60, 0x20, 0x20, 0x70, // 9
+    0xF0, 0x10, 0xF0, 0x80, 0xF0, // 0
+    0xF0, 0x10, 0xF0, 0x10, 0xF0, // 1
     0x90, 0x90, 0xF0, 0x10, 0x10, // A
     0xF0, 0x80, 0xF0, 0x10, 0xF0, // B
+    0xF0, 0x80, 0xF0, 0x90, 0xF0, // 2
+    0xF0, 0x10, 0x20, 0x40, 0x40, // 3
     0xF0, 0x90, 0xF0, 0x90, 0xF0, // C
     0xF0, 0x90, 0xF0, 0x10, 0xF0, // D
+    0xF0, 0x90, 0xF0, 0x90, 0x90, // 4
+    0xE0, 0x90, 0xE0, 0x90, 0xE0, // 5
     0xF0, 0x80, 0x80, 0x80, 0xF0, // E
     0xE0, 0x90, 0x90, 0x90, 0xE0, // F
+    0xF0, 0x80, 0xF0, 0x80, 0xF0, // 6
+    0xF0, 0x80, 0xF0, 0x80, 0x80, // 7
 ];
 
 pub struct Cpu {
@@ -137,7 +137,7 @@ impl Cpu {
             }
             Instr::AddVxKK(x, kk) => {
                 // Set Vx = Vx + kk.
-                self.v[x] += kk
+                self.v[x] = self.v[x].wrapping_add(kk);
             }
             Instr::LdVxVy(x, y) => {
                 // Set Vx = Vy.
@@ -157,29 +157,21 @@ impl Cpu {
             }
             Instr::AddVxVy(x, y) => {
                 // Set Vx = Vx + Vy, set VF = carry.
-                let sum = (self.v[x] as u16) + (self.v[y] as u16);
-                if sum > 255 {
-                    self.v[0xF] = 1;
-                }
-                self.v[x] = sum as u8;
+                let (res, overflow) = self.v[x].overflowing_add(self.v[y]);
+                self.v[0xF] = overflow as u8;
+                self.v[x] = res;
             }
             Instr::SubVxVy(x, y) => {
                 // Set Vx = Vx - Vy, set VF = NOT borrow.
-                if self.v[x] > self.v[y] {
-                    self.v[0xF] = 1;
-                } else {
-                    self.v[0xF] = 0;
-                }
-                self.v[x] -= self.v[y];
+                let (res, overflow) = self.v[x].overflowing_sub(self.v[y]);
+                self.v[0xF] = !overflow as u8;
+                self.v[x] = res;
             }
             Instr::SubnVxVy(x, y) => {
                 // Set Vx = Vy - Vx, set VF = NOT borrow.
-                if self.v[y] > self.v[x] {
-                    self.v[0xF] = 1;
-                } else {
-                    self.v[0xF] = 0;
-                }
-                self.v[x] = self.v[y] - self.v[x];
+                let (res, overflow) = self.v[y].overflowing_sub(self.v[x]);
+                self.v[0xF] = !overflow as u8;
+                self.v[x] = res;
             }
             Instr::ShrVx(x) => {
                 // Set Vx = Vx SHR 1.
@@ -215,12 +207,15 @@ impl Cpu {
             }
             Instr::SkpVx(x) => {
                 // Skip next instruction if key with the value of Vx is pressed.
-                if keypad.is_pressed(self.v[x]) {
+                if keypad.is_down(self.v[x]) {
                     self.skip();
                 }
             }
             Instr::SknpVx(x) => {
                 // Skip next instruction if key with the value of Vx is not pressed.
+                if !keypad.is_down(self.v[x]) {
+                    self.skip();
+                }
             }
             Instr::LdVxDT(x) => {
                 // Set Vx = delay timer value.
@@ -228,10 +223,10 @@ impl Cpu {
             }
             Instr::LdVxK(x) => {
                 // Wait for a key press, store the value of the key in Vx.
-                if let Some(k) = keypad.get_pressed_key() {
+                if let Some(k) = keypad.get_down_key() {
                     self.v[x] = k;
                 } else {
-                    self.pc -= 1;
+                    self.pc -= 2;
                 }
             }
             Instr::LdDTVx(x) => {
