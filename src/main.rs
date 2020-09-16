@@ -1,6 +1,6 @@
 use chip8::Chip8;
 use clap::{App, Arg, ArgMatches};
-use minifb::{Key, Scale, ScaleMode, Window, WindowOptions};
+use minifb::{Key, KeyRepeat, Scale, ScaleMode, Window, WindowOptions};
 use std::path::PathBuf;
 use std::str::FromStr;
 use std::time::{Duration, Instant};
@@ -19,21 +19,21 @@ const WINDOW_HEIGHT: usize = 32;
 const TIMERS_INTERVAL_MICROS: u64 = 1_000_000 / 60;
 
 const KEYS: [Key; 16] = [
+    Key::X,
     Key::Key1,
     Key::Key2,
     Key::Key3,
-    Key::Key4,
     Key::Q,
     Key::W,
     Key::E,
-    Key::R,
     Key::A,
     Key::S,
     Key::D,
-    Key::F,
     Key::Z,
-    Key::X,
     Key::C,
+    Key::Key4,
+    Key::R,
+    Key::F,
     Key::V,
 ];
 
@@ -130,6 +130,7 @@ fn main() {
         WINDOW_HEIGHT,
         WindowOptions {
             resize: true,
+            scale: Scale::X8,
             scale_mode: ScaleMode::AspectRatioStretch,
             ..WindowOptions::default()
         },
@@ -151,8 +152,8 @@ fn main() {
 
     // MAIN LOOP
     while window.is_open() && !window.is_key_down(Key::Escape) {
-        handle_keypad(&window, &mut chip8);
         if last_cycle_update.elapsed() >= cycle_duration {
+            handle_keypad(&window, &mut chip8);
             chip8.cpu_cycle();
             last_cycle_update = Instant::now();
         }
@@ -170,9 +171,9 @@ fn main() {
 fn handle_keypad(window: &Window, chip8: &mut Chip8) {
     for (i, k) in KEYS.iter().enumerate() {
         if window.is_key_down(*k) {
-            chip8.keypad.set_pressed(i as u8, true);
+            chip8.keypad.set_down(i as u8, true);
         } else {
-            chip8.keypad.set_pressed(i as u8, false);
+            chip8.keypad.set_down(i as u8, false);
         }
     }
 }
