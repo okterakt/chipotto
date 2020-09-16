@@ -1,6 +1,6 @@
 use chip8::Chip8;
 use clap::{App, Arg, ArgMatches};
-use minifb::{Key, KeyRepeat, Scale, ScaleMode, Window, WindowOptions};
+use minifb::{Key, Scale, ScaleMode, Window, WindowOptions};
 use std::path::PathBuf;
 use std::str::FromStr;
 use std::time::{Duration, Instant};

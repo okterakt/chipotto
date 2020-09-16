@@ -1,12 +1,6 @@
 use crate::cpu::Cpu;
 use crate::framebuffer::FrameBuffer;
-use crate::instr::Instr;
 use crate::keypad::Keypad;
-use std::borrow::BorrowMut;
-use std::fs;
-use std::ops::Add;
-use std::path::PathBuf;
-use std::time::{Duration, Instant};
 
 pub(crate) struct Chip8 {
     paused: bool,
