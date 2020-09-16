@@ -47,7 +47,8 @@ impl Memory {
 
     pub fn copy_into(&mut self, dest: &mut [u8], address: u16, num_bytes: u16) {
         check_legal_mem_access(address, num_bytes);
-        dest.copy_from_slice(&self.bytes[(address as usize)..((address + num_bytes) as usize)]);
+        dest[0..(num_bytes as usize)]
+            .copy_from_slice(&self.bytes[(address as usize)..((address + num_bytes) as usize)]);
     }
 }
 
