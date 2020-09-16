@@ -9,6 +9,7 @@ const WINDOW_WIDTH: usize = 64;
 const WINDOW_HEIGHT: usize = 32;
 
 const TIMERS_INTERVAL_MICROS: u64 = 1_000_000 / 60;
+const REFRESH_INTERVAL_MICROS: u64 = 1_000_000 / 60;
 
 const KEYS: [Key; 16] = [
     Key::X,
@@ -48,7 +49,7 @@ impl Chip8App {
 
         // WINDOW CREATION
         let mut window = minifb::Window::new(
-            "Chip-8",
+            "Chipotto",
             WINDOW_WIDTH,
             WINDOW_HEIGHT,
             WindowOptions {
@@ -62,24 +63,25 @@ impl Chip8App {
         // vars for main loop
         let mut last_cycle_update = Instant::now();
         let mut last_timers_update = Instant::now();
+        let mut last_screen_refresh = Instant::now();
         let cycle_duration = Duration::from_micros((1_000_000 / self.config.clock_hz) as u64);
         let timers_duration = Duration::from_micros(TIMERS_INTERVAL_MICROS);
+        let frame_duration = Duration::from_micros(REFRESH_INTERVAL_MICROS);
 
         // MAIN LOOP
         while window.is_open() && !window.is_key_down(Key::Escape) {
             if last_cycle_update.elapsed() >= cycle_duration {
                 self.handle_keypad(&window);
                 self.chip8.cpu_cycle();
-                // refresh screen only if frame buffer has changed
-                if self.chip8.frame_buffer.has_changed() {
-                    self.refresh_screen(&mut window);
-                    self.chip8.frame_buffer.set_changed(false);
-                }
                 last_cycle_update = Instant::now();
             }
             if last_timers_update.elapsed() >= timers_duration {
                 self.chip8.timers_tick();
                 last_timers_update = Instant::now();
+            }
+            if last_screen_refresh.elapsed() >= frame_duration {
+                self.refresh_screen(&mut window);
+                last_screen_refresh = Instant::now();
             }
         }
 

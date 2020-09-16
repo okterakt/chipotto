@@ -11,7 +11,6 @@ mod app;
 pub struct Config {
     rom_file_path: PathBuf,
     clock_hz: u64,
-    refresh_hz: u64,
     color1: (u8, u8, u8),
     color2: (u8, u8, u8),
 }
@@ -21,7 +20,6 @@ impl Config {
         Config {
             rom_file_path,
             clock_hz: 500,
-            refresh_hz: 60,
             color1: (0x00, 0x00, 0x00),
             color2: (0xFF, 0xFF, 0xFF),
         }
@@ -29,11 +27,6 @@ impl Config {
 
     pub fn clock_hz(mut self, clock: u64) -> Self {
         self.clock_hz = clock;
-        self
-    }
-
-    pub fn refresh_hz(mut self, refresh_rate_hz: u64) -> Self {
-        self.refresh_hz = refresh_rate_hz;
         self
     }
 
@@ -49,7 +42,7 @@ impl Config {
 }
 
 fn main() {
-    let args = App::new("Chip-8")
+    let args = App::new("Chipotto")
         .version("0.1")
         .author("okterakt")
         .about("Simple CHIP-8 emulator developed in Rust as a learning project.")
@@ -64,13 +57,6 @@ fn main() {
                 .short("c")
                 .long("cpu-clock")
                 .help("CPU clock in HZ")
-                .takes_value(true),
-        )
-        .arg(
-            Arg::with_name("RATE_HZ")
-                .short("r")
-                .long("refresh-rate")
-                .help("screen refresh rate in HZ")
                 .takes_value(true),
         )
         .arg(
@@ -104,9 +90,6 @@ fn parse_args(matches: ArgMatches) -> Result<Config, Box<dyn error::Error>> {
 
     if let Some(clock_hz) = matches.value_of("CLOCK_HZ") {
         config = config.clock_hz(u64::from_str(clock_hz)?);
-    }
-    if let Some(ref_rate) = matches.value_of("RATE_HZ") {
-        config = config.refresh_hz(u64::from_str(ref_rate)?);
     }
     if let Some(col1) = matches.value_of("COLOR_1") {
         config = config.color1(rgb_from_hex(col1)?);
