@@ -1,9 +1,9 @@
-use crate::cpu::Cpu;
-use crate::framebuffer::FrameBuffer;
-use crate::keypad::Keypad;
-use crate::memory::Memory;
+use super::cpu::Cpu;
+use super::framebuffer::FrameBuffer;
+use super::keypad::Keypad;
+use super::memory::Memory;
 
-pub(crate) struct Chip8 {
+pub struct Chip8 {
     paused: bool,
     pub cpu: Cpu,
     pub frame_buffer: FrameBuffer,

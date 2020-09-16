@@ -67,7 +67,7 @@ impl FrameBuffer {
 
 #[cfg(test)]
 mod tests {
-    use crate::framebuffer::FrameBuffer;
+    use super::*;
 
     #[test]
     fn test_set_get_pixel() {

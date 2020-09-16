@@ -1,7 +1,7 @@
-use crate::framebuffer::FrameBuffer;
-use crate::instr::Instr;
-use crate::keypad::Keypad;
-use crate::memory::Memory;
+use super::framebuffer::FrameBuffer;
+use super::instr::Instr;
+use super::keypad::Keypad;
+use super::memory::Memory;
 use rand::prelude::ThreadRng;
 use rand::Rng;
 
@@ -249,12 +249,7 @@ impl Cpu {
 
 #[cfg(test)]
 mod tests {
-    use crate::chip8::Chip8;
-    use crate::cpu::Cpu;
-    use crate::framebuffer::FrameBuffer;
-    use crate::instr::Instr;
-    use crate::keypad::Keypad;
-    use crate::memory::Memory;
+    use super::*;
 
     #[test]
     fn test_exec_LdBVx() {

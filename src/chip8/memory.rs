@@ -90,7 +90,7 @@ fn check_legal_mem_access(address: u16, num_bytes: u16) {
 
 #[cfg(test)]
 mod tests {
-    use crate::memory::*;
+    use super::*;
 
     #[test]
     fn test_read_write_valid() {
