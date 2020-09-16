@@ -13,15 +13,15 @@ impl Default for Keypad {
 }
 
 impl Keypad {
-    pub fn is_pressed(&self, idx: u8) -> bool {
+    pub fn is_down(&self, idx: u8) -> bool {
         self.keys[idx as usize]
     }
 
-    pub fn set_pressed(&mut self, idx: u8, pressed: bool) {
-        self.keys[idx as usize] = pressed;
+    pub fn set_down(&mut self, idx: u8, down: bool) {
+        self.keys[idx as usize] = down;
     }
 
-    pub fn get_pressed_key(&self) -> Option<u8> {
+    pub fn get_down_key(&self) -> Option<u8> {
         for (i, b) in self.keys.iter().enumerate() {
             if *b {
                 return Some(i as u8);
