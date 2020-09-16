@@ -1,5 +1,7 @@
 // 4096B
 const MEM_SIZE: u16 = 0x1000;
+const ROM_START_ADDRESS: u16 = 0x200;
+
 const FONT_SPRITES: [u8; 80] = [
     0xF0, 0x90, 0x90, 0x90, 0xF0, // 8
     0x20, 0x60, 0x20, 0x20, 0x70, // 9
@@ -33,6 +35,10 @@ impl Memory {
         mem.write_data(0x0, &FONT_SPRITES);
 
         mem
+    }
+
+    pub fn load_rom(&mut self, contents: &[u8]) {
+        self.write_data(ROM_START_ADDRESS, contents);
     }
 
     pub fn read_byte(&self, address: u16) -> u8 {

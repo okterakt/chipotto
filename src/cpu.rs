@@ -1,13 +1,9 @@
-use crate::chip8::Chip8;
 use crate::framebuffer::FrameBuffer;
 use crate::instr::Instr;
 use crate::keypad::Keypad;
 use crate::memory::Memory;
 use rand::prelude::ThreadRng;
 use rand::Rng;
-use std::cell::RefCell;
-use std::fs;
-use std::rc::Rc;
 
 const PC_START: u16 = 0x200;
 const STACK_SIZE: usize = 16;
@@ -19,7 +15,6 @@ pub struct Cpu {
     dt: u8,          // delay timer
     st: u8,          // sound timer
     stack: Vec<u16>, // stack
-    mem: Memory,
     rng: ThreadRng,
 }
 
@@ -32,13 +27,8 @@ impl Cpu {
             dt: 0,
             st: 0,
             stack: Vec::with_capacity(STACK_SIZE),
-            mem: Memory::new(),
             rng: rand::thread_rng(),
         }
-    }
-
-    pub fn load_rom(&mut self, contents: &[u8]) {
-        self.mem.write_data(PC_START, contents);
     }
 
     pub fn update_timers(&mut self) {
@@ -50,22 +40,28 @@ impl Cpu {
         }
     }
 
-    pub fn cycle(&mut self, frame_buffer: &mut FrameBuffer, keypad: &mut Keypad) {
-        let opcode = self.fetch();
+    pub fn cycle(&mut self, frame_buffer: &mut FrameBuffer, mem: &mut Memory, keypad: &mut Keypad) {
+        let opcode = self.fetch(mem);
         self.skip(); // we read two bytes from memory so we need to increment pc by 2
         let instr = self.decode(opcode);
-        self.exec(instr, frame_buffer, keypad);
+        self.exec(instr, frame_buffer, mem, keypad);
     }
 
-    fn fetch(&self) -> u16 {
-        self.mem.read_word(self.pc)
+    fn fetch(&self, mem: &Memory) -> u16 {
+        mem.read_word(self.pc)
     }
 
     fn decode(&self, opcode: u16) -> Instr {
         Instr::from(opcode)
     }
 
-    fn exec(&mut self, instr: Instr, frame_buffer: &mut FrameBuffer, keypad: &mut Keypad) {
+    fn exec(
+        &mut self,
+        instr: Instr,
+        frame_buffer: &mut FrameBuffer,
+        mem: &mut Memory,
+        keypad: &mut Keypad,
+    ) {
         match instr {
             Instr::Cls => {
                 // Clear the display.
@@ -180,7 +176,7 @@ impl Cpu {
                 let coll = frame_buffer.draw(
                     self.v[x] as u8,
                     self.v[y] as u8,
-                    self.mem.read_data(self.i, n as u16).as_slice(),
+                    mem.read_data(self.i, n as u16).as_slice(),
                 );
                 self.v[0x0F] = coll as u8;
             }
@@ -230,24 +226,20 @@ impl Cpu {
                 let hundreds = num / 100;
                 let tens = (num % 100) / 10;
                 let digits = num % 10;
-                self.mem.write_byte(self.i, hundreds);
-                self.mem.write_byte(self.i + 1, tens);
-                self.mem.write_byte(self.i + 2, digits);
+                mem.write_byte(self.i, hundreds);
+                mem.write_byte(self.i + 1, tens);
+                mem.write_byte(self.i + 2, digits);
             }
             Instr::LdIVx(x) => {
                 // Store registers V0 through Vx in memory starting at location I.
-                self.mem.write_data(self.i, &self.v[0..=x])
+                mem.write_data(self.i, &self.v[0..=x])
             }
             Instr::LdVxI(x) => {
                 // Read registers V0 through Vx from memory starting at location I.
-                self.mem.copy_into(&mut self.v, self.i, (x + 1) as u16);
+                mem.copy_into(&mut self.v, self.i, (x + 1) as u16);
             }
             _ => {}
         }
-    }
-
-    fn step(&mut self) {
-        self.pc += 1;
     }
 
     fn skip(&mut self) {
@@ -262,19 +254,21 @@ mod tests {
     use crate::framebuffer::FrameBuffer;
     use crate::instr::Instr;
     use crate::keypad::Keypad;
+    use crate::memory::Memory;
 
     #[test]
     fn test_exec_LdBVx() {
         // TODO: create frame buffer, memory and keypad only, not entire chip8
         let mut frame_buffer = FrameBuffer::default();
         let mut cpu = Cpu::new();
+        let mut mem = Memory::new();
         let mut keypad = Keypad::default();
         cpu.i = 0x210;
         cpu.v[0] = 139;
         let instr = Instr::LdBVx(0);
-        cpu.exec(instr, &mut frame_buffer, &mut keypad);
-        assert_eq!(1, cpu.mem.read_byte(cpu.i));
-        assert_eq!(3, cpu.mem.read_byte(cpu.i + 1));
-        assert_eq!(9, cpu.mem.read_byte(cpu.i + 2))
+        cpu.exec(instr, &mut frame_buffer, &mut mem, &mut keypad);
+        assert_eq!(1, mem.read_byte(cpu.i));
+        assert_eq!(3, mem.read_byte(cpu.i + 1));
+        assert_eq!(9, mem.read_byte(cpu.i + 2))
     }
 }
