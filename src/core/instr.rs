@@ -45,7 +45,7 @@ impl Instr {
             ((opcode & 0xF000) >> 12) as u8,
             ((opcode & 0x0F00) >> 8) as u8,
             ((opcode & 0x00F0) >> 4) as u8,
-            ((opcode & 0x000F) >> 0) as u8,
+            (opcode & 0x000F) as u8,
         );
         let nnn = opcode & 0x0FFF; // also called xyz
         let kk = (opcode & 0x00FF) as u8; // also called yz

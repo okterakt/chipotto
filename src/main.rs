@@ -4,7 +4,7 @@ use std::path::PathBuf;
 use std::str::FromStr;
 use std::{error, process};
 
-mod chip8;
+mod core;
 
 mod app;
 
@@ -102,7 +102,7 @@ fn parse_args(matches: ArgMatches) -> Result<Config, Box<dyn error::Error>> {
 }
 
 fn rgb_from_hex(hex: &str) -> Result<(u8, u8, u8), Box<dyn error::Error>> {
-    let mut hex_trimmed = hex.trim_start_matches("#");
+    let mut hex_trimmed = hex.trim_start_matches('#');
     hex_trimmed = hex_trimmed.trim_start_matches("0x");
     let r: u8 = u8::from_str_radix(&hex_trimmed[0..2], 16)?;
     let g: u8 = u8::from_str_radix(&hex_trimmed[2..4], 16)?;

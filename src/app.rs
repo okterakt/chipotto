@@ -1,4 +1,4 @@
-use crate::chip8::chip8::Chip8;
+use crate::core::chip8::Chip8;
 use crate::Config;
 use minifb::{Key, Scale, ScaleMode, Window, WindowOptions};
 use std::error::Error;

@@ -45,8 +45,8 @@ impl FrameBuffer {
         // in input, we first need to transform each bit in a byte with values 0 or 1 (on/off).
         // one byte in input is equivalent to 8 bytes in the buffer.
         let mut collided = false;
-        let mut row = 0;
-        for byte in data.iter() {
+        for (row, byte) in data.iter().enumerate() {
+            let row = row as u8;
             for col in 0..8 {
                 let new_val = (byte >> (7 - col)) & 0x01;
                 if new_val == 1 {
@@ -59,7 +59,6 @@ impl FrameBuffer {
                     self.set_pixel(x_idx, y_idx, new_val ^ old_val);
                 }
             }
-            row += 1;
         }
         collided
     }
