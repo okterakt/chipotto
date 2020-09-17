@@ -1,4 +1,4 @@
-name: Continuous integration
+name: CI
 
 on:
   push:
@@ -20,12 +20,15 @@ jobs:
           profile: minimal
           toolchain: stable
           override: true
-      - uses: actions-rs/cargo@v1
+      - name: Install minifb dependencies
+        run: sudo apt install libxkbcommon-dev libwayland-cursor0 libwayland-dev
+      - name: Run check
+        uses: actions-rs/cargo@v1
         with:
           command: check
 
   test:
-    name: Test Suite
+    name: Test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -52,4 +55,3 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: fmt
-  
