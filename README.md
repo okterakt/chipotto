@@ -40,7 +40,7 @@ The following is the tree view of the `src/` directory:
 ## Usage
 
 ### How to install
-Firs of all you will need to install the [Cargo and Rust tools](https://rustup.rs/). Since Chipotto depends on the `minifb` crate for window creation, rendering, and keyboard management, you will also need to install the following dependencies:
+First of all you will need to install the [Cargo and Rust tools](https://rustup.rs/). Since Chipotto depends on the `minifb` crate for window creation, rendering, and keyboard management, you will also need to install the following dependencies:
 ```sh
 sudo apt install libxkbcommon-dev libwayland-cursor0 libwayland-dev
 ```
